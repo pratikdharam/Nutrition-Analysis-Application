@@ -1,53 +1,78 @@
 package com.example.nutrition_analysis
 
 import android.os.Bundle
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.nutrition_analysis.R
+import com.example.nutrition_analysis.databinding.ActivityViewRecordsBinding
 
 class ViewRecordsActivity : AppCompatActivity() {
 
-    private lateinit var recordsRecyclerView: RecyclerView
+    private lateinit var binding: ActivityViewRecordsBinding
     private lateinit var adapter: RecordAdapter
     private lateinit var databaseHelper: DatabaseHelper
-    private lateinit var clearRecordsButton: Button
-    private var recordList: MutableList<NutritionRecord> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_view_records)
+        binding = ActivityViewRecordsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        recordsRecyclerView = findViewById(R.id.recordsRecyclerView)
-        recordsRecyclerView.layoutManager = LinearLayoutManager(this)
-
-        clearRecordsButton = findViewById(R.id.clearRecordsButton)
-        databaseHelper = DatabaseHelper(this)
-
-        // Load and display the records initially
+        setupUI()
+        setupRecyclerView()
         loadRecords()
+        setupClickListeners()
+    }
 
-        // Clear all records when the button is clicked
-        clearRecordsButton.setOnClickListener { clearAllRecords() }
+    private fun setupUI() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            title = "Saved Records"
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = RecordAdapter(emptyList())
+        binding.recordsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@ViewRecordsActivity)
+            adapter = this@ViewRecordsActivity.adapter
+        }
     }
 
     private fun loadRecords() {
-        recordList = databaseHelper.getAllRecords().toMutableList()
-        adapter = RecordAdapter(recordList)
-        recordsRecyclerView.adapter = adapter
+        databaseHelper = DatabaseHelper(this)
+        val records = databaseHelper.getAllRecords()
+        adapter.updateRecords(records)
+
+        // Show empty state if no records
+        binding.emptyStateLayout.visibility = if (records.isEmpty()) {
+            android.view.View.VISIBLE
+        } else {
+            android.view.View.GONE
+        }
+    }
+
+    private fun setupClickListeners() {
+        binding.clearRecordsButton.setOnClickListener {
+            clearAllRecords()
+        }
     }
 
     private fun clearAllRecords() {
-        if (recordList.isEmpty()) {
-            Toast.makeText(this, "No records to clear.", Toast.LENGTH_SHORT).show()
+        val currentRecords = adapter.getCurrentRecords()
+        if (currentRecords.isEmpty()) {
+            Toast.makeText(this, "No records to clear", Toast.LENGTH_SHORT).show()
             return
         }
 
         databaseHelper.clearAllRecords()
-        recordList.clear()
-        adapter.notifyDataSetChanged()  // Refresh the RecyclerView
-        Toast.makeText(this, "All records cleared successfully.", Toast.LENGTH_SHORT).show()
+        adapter.updateRecords(emptyList())
+        binding.emptyStateLayout.visibility = android.view.View.VISIBLE
+        Toast.makeText(this, "All records cleared", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 }

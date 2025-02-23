@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+app/src/main/java/com/example/nutrition_analysis/ApiKeys.kt
+

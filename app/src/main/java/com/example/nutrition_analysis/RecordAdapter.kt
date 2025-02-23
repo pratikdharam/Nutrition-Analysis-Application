@@ -1,45 +1,50 @@
 package com.example.nutrition_analysis
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.nutrition_analysis.R
+import com.example.nutrition_analysis.databinding.ItemRecordBinding
 import java.io.File
 
-class RecordAdapter(private val recordList: List<NutritionRecord>) :
+class RecordAdapter(private var records: List<NutritionRecord>) :
     RecyclerView.Adapter<RecordAdapter.ViewHolder>() {
 
+    class ViewHolder(val binding: ItemRecordBinding) : RecyclerView.ViewHolder(binding.root)
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_record, parent, false)
-        return ViewHolder(view)
+        val binding = ItemRecordBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val record = recordList[position]
+        val record = records[position]
 
-        // Set the nutrition details
-        holder.nutritionDetailsTextView.text = record.nutritionDetails
+        with(holder.binding) {
+            // Set the nutrition details
+            nutritionDetailsTextView.text = record.nutritionDetails
 
-        // Set the image (if the path is valid)
-        val imgFile = File(record.imagePath)
-        if (imgFile.exists()) {
-            val bitmap: Bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
-            holder.imageView.setImageBitmap(bitmap)
-        } else {
-            holder.imageView.setImageResource(android.R.drawable.ic_menu_report_image) // Placeholder image
+            // Set the image (if the path is valid)
+            val imgFile = File(record.imagePath)
+            if (imgFile.exists()) {
+                val bitmap = BitmapFactory.decodeFile(imgFile.absolutePath)
+                imageView.setImageBitmap(bitmap)
+            } else {
+                imageView.setImageResource(android.R.drawable.ic_menu_report_image)
+            }
         }
     }
 
-    override fun getItemCount(): Int = recordList.size
+    override fun getItemCount(): Int = records.size
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imageView)
-        val nutritionDetailsTextView: TextView = itemView.findViewById(R.id.nutritionDetailsTextView)
+    fun updateRecords(newRecords: List<NutritionRecord>) {
+        records = newRecords
+        notifyDataSetChanged()
     }
+
+    fun getCurrentRecords(): List<NutritionRecord> = records
 }
